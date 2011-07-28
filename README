@@ -21,7 +21,7 @@ directly in your source code. To build the library you can use the shipped
 Makefile which should work for Linux and Mac OS X.
 
 If you have ideas, suggestions or any other thing you want to tell me:
-Please contact me throught GitHub (https://github.com/FlopsKa).
+Please contact me through GitHub (https://github.com/FlopsKa).
 
 Features:
 - simple point class wich can calculate the distance between two points
