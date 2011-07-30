@@ -61,6 +61,7 @@ class vector2d {
 	float _y;
 	
 	public:
+	vector2d ();
 	vector2d (int, int);
 	vector2d (point2d, point2d);
 	~vector2d ();

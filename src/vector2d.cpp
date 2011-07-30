@@ -20,6 +20,14 @@
 
 using namespace libvec2d;
 
+vector2d::vector2d () {
+	/*! \brief vector2d default constructor.
+	 *
+	 * Creates a zero vector.
+	 */
+	_x = 0;
+	_y = 0;
+}
 vector2d::vector2d (int x = 0, int y = 0) {
 	/*!	\brief vector2d contructor
 	 *	\param x defaults to 0, saved in the private member _x.
