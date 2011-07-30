@@ -10,7 +10,7 @@ Field::Field() : h_wall(1, 0), v_wall(0, 1) {
 	SCREEN_WIDTH = 640;
 	SCREEN_HEIGHT = 480;
 	SCREEN_BPP = 32;
-	FPS = 30;
+	FPS = 60;
 	
 	screen = NULL;
 	stop = false;
@@ -51,8 +51,8 @@ void Field::run() {
 	std::vector<Ball> myBalls;
 	std::vector<Ball>::iterator it;
 	
-	for(int i = 1; i <= 4; i++) 
-		myBalls.push_back(Ball(80, 80, rand() % 5 + 5, rand() % 5 + 5, 20));
+	for(int i = 0; i <= 20; i++) 
+		myBalls.push_back(Ball(80, 80, rand() % 3 + 10, rand() % 3 + 10, 20));
 
 	while(!stop) {
 		fps.start();
@@ -85,8 +85,11 @@ void Field::run() {
 				c.makeNormal();
 				it->collision(c);
 			}
-			it->update();
 		}
+		
+		for(it = myBalls.begin(); it != myBalls.end(); ++it)
+			it->update();
+			
 		// Output
 		SDL_LockSurface(screen);
 		// Clear the screen
