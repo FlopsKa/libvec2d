@@ -29,7 +29,7 @@ class Ball {
 	int x;
 	
 	public:
-	Ball();
+	Ball(int, int, int, int, int);
 	~Ball();
 	int getRadius();
 	point2d getCenter();

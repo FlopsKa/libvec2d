@@ -168,6 +168,7 @@ void vector2d::mirrorWith(vector2d vec) {
 	 */
 	vector2d tmp = vec;
 	tmp.makeNormal();
+	tmp.makeUnit();
 	
 	*this -= tmp * (*this * tmp) * 2;
 }

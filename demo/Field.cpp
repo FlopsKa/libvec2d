@@ -1,3 +1,6 @@
+#include <vector>
+#include <iostream>
+
 #include "Field.h"
 #include "Ball.h"
 
@@ -41,8 +44,16 @@ void Field::run() {
 	 */
 	Timer fps;
 	
-	// Get a ball
-	Ball myBall;
+	srand(time(NULL));
+	
+	// Get some balls
+	Ball center(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0, 50);
+	std::vector<Ball> myBalls;
+	std::vector<Ball>::iterator it;
+	
+	for(int i = 1; i <= 4; i++) 
+		myBalls.push_back(Ball(80, 80, rand() % 5 + 5, rand() % 5 + 5, 20));
+
 	while(!stop) {
 		fps.start();
 		
@@ -55,22 +66,34 @@ void Field::run() {
 		}
 		
 		// Logic
-		myBall.update();
+		for(it = myBalls.begin(); it != myBalls.end(); ++it) {
+			//std::cout << it->getCenter().print() << std::endl;
 		
-		// check for collisions between the ball and the walls
-		if((myBall.getCenter().getX() + myBall.getRadius() >= SCREEN_WIDTH)		// collision with the right wall
-			|| (myBall.getCenter().getX() - myBall.getRadius() <= 0)) {			// collision with the left wall
-			myBall.collision(v_wall);
-		}
-		if((myBall.getCenter().getY() + myBall.getRadius() >= SCREEN_HEIGHT) 	// collision with lower wall
-			|| (myBall.getCenter().getY() - myBall.getRadius() <= 0)) {			// collision with upper wall
-			myBall.collision(h_wall);	
+			// check for collisions between the ball and the walls
+			if((it->getCenter().getX() + it->getRadius() >= SCREEN_WIDTH - 20)		// collision with the right wall
+				|| (it->getCenter().getX() - it->getRadius() <= 0 + 20)) {			// collision with the left wall
+				it->collision(v_wall);
+			}
+			if((it->getCenter().getY() + it->getRadius() >= SCREEN_HEIGHT - 20) 	// collision with lower wall
+				|| (it->getCenter().getY() - it->getRadius() <= 0 + 20)) {			// collision with upper wall
+				it->collision(h_wall);	
+			}
+			
+			// check for collision with the center ball
+			if(it->getCenter().getDistanceTo(center.getCenter()) <= it->getRadius() + center.getRadius()) {
+				vector2d c(it->getCenter(), center.getCenter());
+				c.makeNormal();
+				it->collision(c);
+			}
+			it->update();
 		}
 		// Output
 		SDL_LockSurface(screen);
 		// Clear the screen
 		SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0x00, 0x00, 0x00));
-		fill_circle(screen, myBall.getCenter(), 20, 0xffffffff);
+		for(it = myBalls.begin(); it < myBalls.end(); ++it)
+			fill_circle(screen, it->getCenter(), it->getRadius(), 0xffffffff);
+		fill_circle(screen, center.getCenter(), center.getRadius(), 0xff0000ff);
 		
 		SDL_FreeSurface(screen);
 		        

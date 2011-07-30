@@ -1,10 +1,14 @@
 #include "Ball.h"
 
-Ball::Ball() : offset(40, 40), slope(3, 3), center(40, 40) {
+Ball::Ball(int px, int py, int sx, int sy, int r) {
 	/*! \brief Initialize vectors via initialization list
 	 */
 	x = 0;
-	radius = 30;
+	radius = r;
+	
+	offset = vector2d(px, py);
+	slope = vector2d(sx, sy);
+	center = point2d(px, py);
 }
 Ball::~Ball() {
 	/*! \brief Empty constructor.
@@ -27,8 +31,8 @@ void Ball::update() {
 	 */
 	x++;
 	
-	center.setX(offset.getX() + (x * slope.getX())); // works
-	center.setY(offset.getY() + (x * slope.getY())); // gives segfault
+	center.setX(offset.getX() + (x * slope.getX()));
+	center.setY(offset.getY() + (x * slope.getY()));
 }
 void Ball::collision(vector2d vec) {
 	slope.mirrorWith(vec);
