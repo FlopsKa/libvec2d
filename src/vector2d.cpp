@@ -28,7 +28,7 @@ vector2d::vector2d () {
 	_x = 0;
 	_y = 0;
 }
-vector2d::vector2d (int x = 0, int y = 0) {
+vector2d::vector2d (float x = 0, float y = 0) {
 	/*!	\brief vector2d contructor
 	 *	\param x defaults to 0, saved in the private member _x.
 	 *	\param y defaults to 0, saved in the private member _y.

@@ -62,7 +62,7 @@ class vector2d {
 	
 	public:
 	vector2d ();
-	vector2d (int, int);
+	vector2d (float, float);
 	vector2d (point2d, point2d);
 	~vector2d ();
 	float getX () const;
