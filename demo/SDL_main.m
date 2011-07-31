@@ -1,15 +1,14 @@
 /*   SDLMain.m - main entry point for our Cocoa-ized SDL app
        Initial Version: Darrell Walisser <dwaliss1@purdue.edu>
        Non-NIB-Code & other changes: Max Horn <max@quendi.de>
+
+    Feel free to customize this file to suit your needs
 */
 
-#import <SDL.h>
-#import <Cocoa/Cocoa.h>
-#import <sys/param.h>
-#import <unistd.h>
-
-@interface SDLMain : NSObject
-@end
+#include "SDL/SDL.h"
+#include "SDLMain.h"
+#include <sys/param.h> /* for MAXPATHLEN */
+#include <unistd.h>
 
 /* For some reaon, Apple removed setAppleMenu from the headers in 10.4,
  but the method still is there and works. To avoid warnings, we declare
@@ -18,6 +17,12 @@
 - (void)setAppleMenu:(NSMenu *)menu;
 @end
 
+/* Use this flag to determine whether we use SDLMain.nib or not */
+#define		SDL_USE_NIB_FILE	0
+
+/* Use this flag to determine whether we use CPS (docking) or not */
+#define		SDL_USE_CPS		1
+#ifdef SDL_USE_CPS
 /* Portions of CPS.h */
 typedef struct CPSProcessSerNum
 {
@@ -29,6 +34,8 @@ extern OSErr	CPSGetCurrentProcess( CPSProcessSerNum *psn);
 extern OSErr 	CPSEnableForegroundOperation( CPSProcessSerNum *psn, UInt32 _arg2, UInt32 _arg3, UInt32 _arg4, UInt32 _arg5);
 extern OSErr	CPSSetFrontProcess( CPSProcessSerNum *psn);
 
+#endif /* SDL_USE_CPS */
+
 static int    gArgc;
 static char  **gArgv;
 static BOOL   gFinderLaunch;
@@ -36,11 +43,11 @@ static BOOL   gCalledAppMainline = FALSE;
 
 static NSString *getApplicationName(void)
 {
-    NSDictionary *dict;
+    const NSDictionary *dict;
     NSString *appName = 0;
 
     /* Determine the application name */
-    dict = (NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetMainBundle());
+    dict = (const NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetMainBundle());
     if (dict)
         appName = [dict objectForKey: @"CFBundleName"];
     
@@ -49,6 +56,13 @@ static NSString *getApplicationName(void)
 
     return appName;
 }
+
+#if SDL_USE_NIB_FILE
+/* A helper category for NSString */
+@interface NSString (ReplaceSubString)
+- (NSString *)stringByReplacingRange:(NSRange)aRange with:(NSString *)aString;
+@end
+#endif
 
 @interface SDLApplication : NSApplication
 @end
@@ -73,16 +87,42 @@ static NSString *getApplicationName(void)
     if (shouldChdir)
     {
         char parentdir[MAXPATHLEN];
-		CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-		CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
-		if (CFURLGetFileSystemRepresentation(url2, true, (UInt8 *)parentdir, MAXPATHLEN)) {
-	        assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
-		}
-		CFRelease(url);
-		CFRelease(url2);
-	}
-
+        CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+        CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
+        if (CFURLGetFileSystemRepresentation(url2, 1, (UInt8 *)parentdir, MAXPATHLEN)) {
+            chdir(parentdir);   /* chdir to the binary app's parent */
+        }
+        CFRelease(url);
+        CFRelease(url2);
+    }
 }
+
+#if SDL_USE_NIB_FILE
+
+/* Fix menu to contain the real app name instead of "SDL App" */
+- (void)fixMenu:(NSMenu *)aMenu withAppName:(NSString *)appName
+{
+    NSRange aRange;
+    NSEnumerator *enumerator;
+    NSMenuItem *menuItem;
+
+    aRange = [[aMenu title] rangeOfString:@"SDL App"];
+    if (aRange.length != 0)
+        [aMenu setTitle: [[aMenu title] stringByReplacingRange:aRange with:appName]];
+
+    enumerator = [[aMenu itemArray] objectEnumerator];
+    while ((menuItem = [enumerator nextObject]))
+    {
+        aRange = [[menuItem title] rangeOfString:@"SDL App"];
+        if (aRange.length != 0)
+            [menuItem setTitle: [[menuItem title] stringByReplacingRange:aRange with:appName]];
+        if ([menuItem hasSubmenu])
+            [self fixMenu:[menuItem submenu] withAppName:appName];
+    }
+    [ aMenu sizeToFit ];
+}
+
+#else
 
 static void setApplicationMenu(void)
 {
@@ -164,6 +204,7 @@ static void CustomApplicationMain (int argc, char **argv)
     /* Ensure the application object is initialised */
     [SDLApplication sharedApplication];
     
+#ifdef SDL_USE_CPS
     {
         CPSProcessSerNum PSN;
         /* Tell the dock about us */
@@ -172,6 +213,7 @@ static void CustomApplicationMain (int argc, char **argv)
                 if (!CPSSetFrontProcess(&PSN))
                     [SDLApplication sharedApplication];
     }
+#endif /* SDL_USE_CPS */
 
     /* Set up the menubar */
     [NSApp setMainMenu:[[NSMenu alloc] init]];
@@ -188,6 +230,9 @@ static void CustomApplicationMain (int argc, char **argv)
     [sdlMain release];
     [pool release];
 }
+
+#endif
+
 
 /*
  * Catch document open requests...this lets us notice files when the app
@@ -246,6 +291,11 @@ static void CustomApplicationMain (int argc, char **argv)
     /* Set the working directory to the .app's parent directory */
     [self setupWorkingDirectory:gFinderLaunch];
 
+#if SDL_USE_NIB_FILE
+    /* Set the main menu to contain the real app name instead of "SDL App" */
+    [self fixMenu:[NSApp mainMenu] withAppName:getApplicationName()];
+#endif
+
     /* Hand off to main application code */
     gCalledAppMainline = TRUE;
     status = SDL_main (gArgc, gArgv);
@@ -268,7 +318,7 @@ static void CustomApplicationMain (int argc, char **argv)
     NSString *result;
 
     bufferSize = selfLen + aStringLen - aRange.length;
-    buffer = NSAllocateMemoryPages(bufferSize*sizeof(unichar));
+    buffer = (unichar *)NSAllocateMemoryPages(bufferSize*sizeof(unichar));
     
     /* Get first part into buffer */
     localRange.location = 0;
@@ -295,9 +345,12 @@ static void CustomApplicationMain (int argc, char **argv)
 
 @end
 
+
+
 #ifdef main
 #  undef main
 #endif
+
 
 /* Main entry point to executable - should *not* be SDL_main! */
 int main (int argc, char **argv)
@@ -319,6 +372,12 @@ int main (int argc, char **argv)
         gFinderLaunch = NO;
     }
 
+#if SDL_USE_NIB_FILE
+    [SDLApplication poseAsClass:[NSApplication class]];
+    NSApplicationMain (argc, argv);
+#else
     CustomApplicationMain (argc, argv);
+#endif
     return 0;
 }
+

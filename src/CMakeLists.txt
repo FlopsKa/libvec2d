@@ -1,0 +1,1 @@
+add_library (vec2d point2d.cpp vector2d.cpp)

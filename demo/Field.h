@@ -21,7 +21,7 @@
 #include <string>
 #include <cmath>
 
-#include "SDL.h"
+#include "SDL/SDL.h"
 #include "libvec2d.h"
 
 using namespace libvec2d;
