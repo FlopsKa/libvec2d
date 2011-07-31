@@ -1,3 +1,5 @@
+// class from http://lazyfoo.net/
+
 #include "Timer.h"
 
 Timer::Timer()

@@ -1,3 +1,6 @@
+// class from http://lazyfoo.net/
+// added header guard
+
 #ifndef TIMER_H
 #define TIMER_H
 
