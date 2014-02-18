@@ -1,7 +1,8 @@
 /*
  *	libvec2d - Small and efficient two-dimensional vector library written in C++.
  *
- *	Copyright (C) 2011 Florian Kalinke
+ *	Copyright (C) 2011 flopska
+ *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
